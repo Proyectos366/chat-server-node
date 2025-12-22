@@ -2,34 +2,23 @@ import prisma from "#root/config/prisma.js";
 
 async function main() {
   const rol = await prisma.role.create({
-    data: { name: "admin" },
+    data: { nombre: "master", descripcion: "Rol con todos los permisos" },
   });
-  console.log("✅ Rol creado:", rol);
+  console.log("Rol creado:", rol);
 
   // 2. Crear un usuario asociado al rol
-  const user = await prisma.user.create({
+  const user = await prisma.usuario.create({
     data: {
-      name: "Alice",
-      email: "alice@example.com",
-      roleId: rol.id, // relación con el rol creado
+      nombre: "carlos",
+      correo: "carlosjperazab@gmail.com",
+      clave: "$2a$05$qv5dKCZmInzicTS5D0BFu.ThM5g99ScAkKKDjqKfQzMraQjhRnqgS",
+      rolId: rol.id, // relación con el rol creado
     },
   });
-  console.log("✅ Usuario creado:", user);
 
-  // 3. Crear un mensaje asociado al usuario
-  const message = await prisma.message.create({
-    data: {
-      content: "Hola mundo desde Prisma + SQLite 🚀",
-      senderId: user.id,
-    },
-  });
-  console.log("✅ Mensaje creado:", message);
+  // token: "6w2r5ks4rb1gd4r1",
 
-  // 4. Consultar todos los mensajes con su remitente
-  const messages = await prisma.message.findMany({
-    include: { sender: true },
-  });
-  console.log("📩 Mensajes en la base:", messages);
+  console.log("Usuario creado:", user);
 }
 
 main()

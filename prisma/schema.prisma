@@ -1,32 +1,83 @@
+// schema.prisma
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "sqlite" // o "postgresql" / "mysql" según tu stack
   url      = env("DATABASE_URL")
 }
 
-model role {
-  id    Int    @id @default(autoincrement())
-  name  String @unique
-  users user[]
+model Role {
+  id          Int      @id @default(autoincrement())
+  nombre      String   @unique
+  descripcion String?  @default("sin descripcion")
+  borrado     Boolean  @default(false)
+  updatedAt   DateTime @updatedAt
+  createdAt   DateTime @default(now())
+
+  // Relaciones
+  usuarios Usuario[] @relation(name: "UsuarioRole")
 }
 
-model user {
-  id       Int       @id @default(autoincrement())
-  name     String?
-  email    String?   @unique
-  password String?
-  role     role?     @relation(fields: [roleId], references: [id])
-  roleId   Int?
-  messages message[]
-}
+model Usuario {
+  id      Int     @id @default(autoincrement())
+  nombre  String
+  correo  String  @unique
+  clave   String
+  borrado Boolean @default(false)
+  rolId   Int
 
-model message {
-  id        Int      @id @default(autoincrement())
-  content   String
   createdAt DateTime @default(now())
-  sender    user?    @relation(fields: [senderId], references: [id])
-  senderId  Int?
+  updatedAt DateTime @updatedAt
+
+  // Relación al rol (uno a muchos): muchos usuarios pertenecen a un rol
+  rol Role @relation(name: "UsuarioRole", fields: [rolId], references: [id])
+
+  // Back-relaciones para conversaciones:
+  // Un usuario puede ser usuarioUno o usuarioDos en muchas conversaciones
+  ConversacionUsuarioUno Conversacion[] @relation(name: "ConversacionUsuarioUno")
+  ConversacionUsuarioDos Conversacion[] @relation(name: "ConversacionUsuarioDos")
+
+  // Mensajes creados por el usuario
+  CreadorMensaje Mensaje[] @relation(name: "CreadorMensaje")
+}
+
+model Conversacion {
+  id           Int     @id @default(autoincrement())
+  titulo       String?
+  borrado      Boolean @default(false)
+  abierto      Boolean @default(true)
+  usuarioUnoId Int
+  usuarioDosId Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Dos relaciones distintas hacia Usuario para evitar ambigüedad
+  usuarioUno Usuario @relation(name: "ConversacionUsuarioUno", fields: [usuarioUnoId], references: [id])
+  usuarioDos Usuario @relation(name: "ConversacionUsuarioDos", fields: [usuarioDosId], references: [id])
+
+  // Relación con mensajes
+  mensajes Mensaje[]
+}
+
+model Mensaje {
+  id             Int       @id @default(autoincrement())
+  contenido      String
+  leido          Boolean   @default(false)
+  borrado        Boolean   @default(false)
+  reenviado      Boolean   @default(false)
+  horaLeido      DateTime?
+  usuarioId      Int
+  conversacionId Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Creador del mensaje
+  creador Usuario @relation(name: "CreadorMensaje", fields: [usuarioId], references: [id])
+
+  // Conversación a la que pertenece el mensaje
+  conversacion Conversacion @relation(fields: [conversacionId], references: [id])
 }

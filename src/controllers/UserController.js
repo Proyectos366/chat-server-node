@@ -1,4 +1,4 @@
-import validarCrearUsuario from "#root/services/usuarios/validarCrearUsuario";
+import validarCrearUsuario from "#root/services/usuarios/validarCrearUsuario.js";
 import { respuestaAlFront } from "#root/utils/respuestaAlFront.js";
 
 export default class UserController {
@@ -12,14 +12,16 @@ export default class UserController {
         claveUno,
         claveDos
       );
-      
+
+      console.log(validaciones);
+
       if (validaciones.status === "error") {
         return respuestaAlFront(
           res,
           validaciones.status,
           validaciones.message,
           {},
-          400
+          validaciones.codigo ? validaciones.codigo : 400
         );
       }
 
