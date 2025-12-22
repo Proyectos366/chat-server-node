@@ -1,8 +1,9 @@
 // src/utils/validarCamposRegistro.js
 import respuestasAlBack from "#root/utils/respuestasAlBack.js";
 import ValidarCampos from "#root/services/ValidarCampos.js";
+import CifrarDescifrarClaves from "#root/libs/CifrarDescifrarClaves.js";
 
-export default function validarCamposCrearUsuario(
+export default async function validarCamposCrearUsuario(
   nombre,
   correo,
   claveUno,
@@ -19,12 +20,17 @@ export default function validarCamposCrearUsuario(
     if (validarCorreo.status === "error") return validarCorreo;
     if (validarClave.status === "error") return validarClave;
 
+    const claveCifrada = await CifrarDescifrarClaves.cifrarClave(claveUno);
+
+    if (claveCifrada.status === "error") {
+      return respuestasAlBack(claveCifrada.status, claveCifrada.message);
+    }
+
     // 3. Retorna respuesta exitosa con todos los datos validados
     return respuestasAlBack("ok", "Campos validados...", {
       nombre: validarNombre.nombre,
       correo: validarCorreo.correo,
-      claveUno: validarClave.claveUno,
-      claveDos: validarClave.claveDos,
+      claveEncriptada: claveCifrada.claveEncriptada,
     });
   } catch (error) {
     console.log("Error interno, campos registro usuario:", error);

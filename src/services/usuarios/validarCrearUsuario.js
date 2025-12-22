@@ -1,7 +1,7 @@
 import respuestasAlBack from "#root/utils/respuestasAlBack.js";
 import validarCamposCrearUsuario from "#root/services/usuarios/validarCamposCrearUsuario.js";
 import prisma from "#root/config/prisma.js";
-import tokenCrearUsuario from "#root/services/usuarios/tokenCrearUsuario";
+import tokenCrearUsuario from "#root/services/usuarios/tokenCrearUsuario.js";
 
 export default async function validarCrearUsuario(
   nombre,
@@ -10,7 +10,7 @@ export default async function validarCrearUsuario(
   claveDos
 ) {
   try {
-    const validarCampos = validarCamposCrearUsuario(
+    const validarCampos = await validarCamposCrearUsuario(
       nombre,
       correo,
       claveUno,
@@ -33,18 +33,17 @@ export default async function validarCrearUsuario(
       });
     }
 
-    const token = await tokenCrearUsuario();
+    const crearToken = await tokenCrearUsuario();
 
-    if (token.status === "error") {
-      return respuestasAlBack(token.status, token.message);
+    if (crearToken.status === "error") {
+      return respuestasAlBack(crearToken.status, crearToken.message);
     }
 
     return respuestasAlBack("ok", "Validacion crear usuario correcta...", {
       nombre: validarCampos.nombre,
       correo: validarCampos.correo,
-      claveUno: validarCampos.claveUno,
-      claveDos: validarCampos.claveDos,
-      token: validarCampos.token,
+      claveEncriptada: validarCampos.claveEncriptada,
+      token: crearToken.token,
     });
   } catch (error) {
     console.error("Error interno validar crear usuario:", error);

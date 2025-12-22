@@ -25,6 +25,7 @@ model Usuario {
   nombre  String
   correo  String  @unique
   clave   String
+  token   String  @unique
   borrado Boolean @default(false)
   rolId   Int
 
@@ -40,44 +41,115 @@ model Usuario {
   ConversacionUsuarioDos Conversacion[] @relation(name: "ConversacionUsuarioDos")
 
   // Mensajes creados por el usuario
-  CreadorMensaje Mensaje[] @relation(name: "CreadorMensaje")
+  autor Mensaje[] @relation(name: "CreadorMensaje")
 }
 
 model Conversacion {
-  id           Int     @id @default(autoincrement())
-  titulo       String?
-  borrado      Boolean @default(false)
-  abierto      Boolean @default(true)
+  id      Int     @id @default(autoincrement())
+  titulo  String? // Útil para grupos, opcional para chats 1:1
+  borrado Boolean @default(false)
+  abierto Boolean @default(false)
+
+  // Participantes
   usuarioUnoId Int
   usuarioDosId Int
+
+  // Borrado lógico individual (para que uno borre el chat y el otro no)
+  borradoUno Boolean @default(false)
+  borradoDos Boolean @default(false)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // Dos relaciones distintas hacia Usuario para evitar ambigüedad
-  usuarioUno Usuario @relation(name: "ConversacionUsuarioUno", fields: [usuarioUnoId], references: [id])
-  usuarioDos Usuario @relation(name: "ConversacionUsuarioDos", fields: [usuarioDosId], references: [id])
+  // Relaciones
+  usuarioUno Usuario   @relation(name: "ConversacionUsuarioUno", fields: [usuarioUnoId], references: [id])
+  usuarioDos Usuario   @relation(name: "ConversacionUsuarioDos", fields: [usuarioDosId], references: [id])
+  mensajes   Mensaje[]
 
-  // Relación con mensajes
-  mensajes Mensaje[]
+  // Índice compuesto para evitar conversaciones duplicadas entre los mismos dos usuarios
+  @@unique([usuarioUnoId, usuarioDosId])
 }
 
 model Mensaje {
-  id             Int       @id @default(autoincrement())
-  contenido      String
-  leido          Boolean   @default(false)
-  borrado        Boolean   @default(false)
-  reenviado      Boolean   @default(false)
-  horaLeido      DateTime?
-  usuarioId      Int
+  id        Int       @id @default(autoincrement())
+  contenido String
+  leido     Boolean   @default(false)
+  borrado   Boolean   @default(false)
+  reenviado Boolean   @default(false)
+  horaLeido DateTime?
+  tipo      String    @default("texto")
+
+  usuarioEnviaId Int
   conversacionId Int
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // Creador del mensaje
-  creador Usuario @relation(name: "CreadorMensaje", fields: [usuarioId], references: [id])
-
-  // Conversación a la que pertenece el mensaje
+  // Relaciones existentes
+  autor        Usuario      @relation(name: "CreadorMensaje", fields: [usuarioEnviaId], references: [id])
   conversacion Conversacion @relation(fields: [conversacionId], references: [id])
+
+  // --- NUEVA RELACIÓN AGREGADA ---
+  archivos Archivo[] // Un mensaje puede tener muchos archivos (o uno)
+
+  @@index([conversacionId])
 }
+
+model Archivo {
+  id             Int    @id @default(autoincrement())
+  nombre         String // Nombre único en el servidor (ej: UUID-foto.jpg)
+  nombreOriginal String // Nombre real del archivo (ej: vacaciones.jpg)
+  path           String // Ruta o URL del archivo
+  tipo           String // Mime type (ej: image/jpeg)
+  size           Int // Tamaño en bytes
+  extension      String // Extensión del archivo (ej: jpg, png, pdf)
+  mensajeId      Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relación con Mensaje
+  mensaje Mensaje @relation(fields: [mensajeId], references: [id])
+}
+
+// model Conversacion {
+//   id           Int     @id @default(autoincrement())
+//   titulo       String?
+//   borrado      Boolean @default(false)
+//   abierto      Boolean @default(false)
+//   usuarioUnoId Int
+//   usuarioDosId Int
+//   borradoUno   Boolean @default(false)
+//   borradoDos   Boolean @default(false)
+
+//   createdAt DateTime @default(now())
+//   updatedAt DateTime @updatedAt
+
+//   // Dos relaciones distintas hacia Usuario para evitar ambigüedad
+//   usuarioUno Usuario @relation(name: "ConversacionUsuarioUno", fields: [usuarioUnoId], references: [id])
+//   usuarioDos Usuario @relation(name: "ConversacionUsuarioDos", fields: [usuarioDosId], references: [id])
+
+//   // Relación con mensajes
+//   mensajes Mensaje[]
+// }
+
+// model Mensaje {
+//   id             Int       @id @default(autoincrement())
+//   contenido      String
+//   leido          Boolean   @default(false)
+//   borrado        Boolean   @default(false)
+//   reenviado      Boolean   @default(false)
+//   horaLeido      DateTime?
+//   usuarioEnviaId      Int
+//   usuarioRecibeId      Int
+//   conversacionId Int
+
+//   createdAt DateTime @default(now())
+//   updatedAt DateTime @updatedAt
+
+//   // Creador del mensaje
+//   creador Usuario @relation(name: "CreadorMensaje", fields: [usuarioRecibeId], references: [id])
+
+//   // Conversación a la que pertenece el mensaje
+//   conversacion Conversacion @relation(fields: [conversacionId], references: [id])
+// }

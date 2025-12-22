@@ -1,6 +1,6 @@
-import prisma from "#root/config/prisma";
-import AuthTokens from "#root/libs/AuthTokens";
-import respuestasAlBack from "#root/utils/respuestasAlBack";
+import prisma from "#root/config/prisma.js";
+import AuthTokens from "#root/libs/AuthTokens.js";
+import respuestasAlBack from "#root/utils/respuestasAlBack.js";
 
 export default async function tokenCrearUsuario() {
   let tokenGenerado;

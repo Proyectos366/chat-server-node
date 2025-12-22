@@ -1,3 +1,5 @@
+import prisma from "#root/config/prisma.js";
+import { emitirNuevoUsuario } from "#root/config/socket/usuarios/emitirNuevoUsuario.js";
 import validarCrearUsuario from "#root/services/usuarios/validarCrearUsuario.js";
 import { respuestaAlFront } from "#root/utils/respuestaAlFront.js";
 
@@ -13,8 +15,6 @@ export default class UserController {
         claveDos
       );
 
-      console.log(validaciones);
-
       if (validaciones.status === "error") {
         return respuestaAlFront(
           res,
@@ -25,18 +25,33 @@ export default class UserController {
         );
       }
 
-      return respuestaAlFront(
-        res,
-        "ok",
-        "Usuario creado con exito...",
-        {
-          nombre: nombre,
-          correo: correo,
-          claveUno: claveUno,
-          claveDos: claveDos,
+      const creandoUsuario = await prisma.usuario.create({
+        data: {
+          nombre: validaciones.nombre,
+          correo: validaciones.correo,
+          clave: validaciones.claveEncriptada,
+          token: validaciones.token,
+          rolId: 1,
         },
-        201
-      );
+      });
+
+      if (!creandoUsuario) {
+        return respuestaAlFront(
+          res,
+          "error",
+          "Error al crear usuario",
+          {},
+          400
+        );
+      }
+
+      emitirNuevoUsuario({
+        id: creandoUsuario.id,
+        nombre: nombre,
+        correo: correo,
+      });
+
+      return respuestaAlFront(res, "ok", "Usuario creado con exito", {}, 201);
     } catch (error) {
       console.error("Error al crear usuario:", error);
 
