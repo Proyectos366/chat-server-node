@@ -32,16 +32,65 @@ model Usuario {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // Relación al rol (uno a muchos): muchos usuarios pertenecen a un rol
+  // Relación al rol
   rol Role @relation(name: "UsuarioRole", fields: [rolId], references: [id])
 
-  // Back-relaciones para conversaciones:
-  // Un usuario puede ser usuarioUno o usuarioDos en muchas conversaciones
+  // Contactos creados por el usuario (dueño de la agenda)
+  contactos Contacto[] @relation("CreadorContacto")
+
+  // Contactos donde este usuario aparece como "contacto"
+  contactoDe Contacto[] @relation("ContactoUsuario")
+
+  // Conversaciones
   ConversacionUsuarioUno Conversacion[] @relation(name: "ConversacionUsuarioUno")
   ConversacionUsuarioDos Conversacion[] @relation(name: "ConversacionUsuarioDos")
 
   // Mensajes creados por el usuario
   autor Mensaje[] @relation(name: "CreadorMensaje")
+
+  // Sesiones activas del usuario
+  sesiones                  Sesion[]
+  notificacions             Notificacion[]
+  participanteConversacions ParticipanteConversacion[]
+  logs                      Log[]
+  configuracionUsuario      ConfiguracionUsuario?
+  reaccions                 Reaccion[]
+}
+
+model Sesion {
+  id        Int       @id @default(autoincrement())
+  usuarioId Int
+  token     String    @unique
+  activo    Boolean   @default(true)
+  ip        String? // opcional: IP del cliente
+  device    String? // opcional: tipo de dispositivo
+  expiresAt DateTime? // fecha de expiración del token
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id])
+}
+
+model Contacto {
+  id         Int     @id @default(autoincrement())
+  usuarioId  Int
+  contactoId Int?
+  correo     String?
+  alias      String?
+  bloqueado  Boolean @default(false)
+  favorito   Boolean @default(false)
+  borrado    Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relaciones
+  usuario  Usuario  @relation(name: "CreadorContacto", fields: [usuarioId], references: [id])
+  contacto Usuario? @relation(name: "ContactoUsuario", fields: [contactoId], references: [id])
+
+  @@unique([usuarioId, contactoId])
+  @@index([correo])
 }
 
 model Conversacion {
@@ -62,22 +111,24 @@ model Conversacion {
   updatedAt DateTime @updatedAt
 
   // Relaciones
-  usuarioUno Usuario   @relation(name: "ConversacionUsuarioUno", fields: [usuarioUnoId], references: [id])
-  usuarioDos Usuario   @relation(name: "ConversacionUsuarioDos", fields: [usuarioDosId], references: [id])
-  mensajes   Mensaje[]
+  usuarioUno                Usuario                    @relation(name: "ConversacionUsuarioUno", fields: [usuarioUnoId], references: [id])
+  usuarioDos                Usuario                    @relation(name: "ConversacionUsuarioDos", fields: [usuarioDosId], references: [id])
+  mensajes                  Mensaje[]
+  participanteConversacions ParticipanteConversacion[]
 
   // Índice compuesto para evitar conversaciones duplicadas entre los mismos dos usuarios
   @@unique([usuarioUnoId, usuarioDosId])
 }
 
 model Mensaje {
-  id        Int       @id @default(autoincrement())
-  contenido String
-  leido     Boolean   @default(false)
-  borrado   Boolean   @default(false)
-  reenviado Boolean   @default(false)
-  horaLeido DateTime?
-  tipo      String    @default("texto")
+  id         Int       @id @default(autoincrement())
+  contenido  String
+  leido      Boolean   @default(false)
+  borrado    Boolean   @default(false)
+  reenviado  Boolean   @default(false)
+  originalId Int?
+  horaLeido  DateTime?
+  tipo       String    @default("texto")
 
   usuarioEnviaId Int
   conversacionId Int
@@ -90,7 +141,8 @@ model Mensaje {
   conversacion Conversacion @relation(fields: [conversacionId], references: [id])
 
   // --- NUEVA RELACIÓN AGREGADA ---
-  archivos Archivo[] // Un mensaje puede tener muchos archivos (o uno)
+  archivos  Archivo[] // Un mensaje puede tener muchos archivos (o uno)
+  reaccions Reaccion[]
 
   @@index([conversacionId])
 }
@@ -111,6 +163,105 @@ model Archivo {
   // Relación con Mensaje
   mensaje Mensaje @relation(fields: [mensajeId], references: [id])
 }
+
+// Notificaciones: para manejar alertas push o estados de entrega
+model Notificacion {
+  id        Int     @id @default(autoincrement())
+  usuarioId Int
+  mensaje   String
+  tipo      String  @default("info") // info, alerta, mensaje, etc.
+  leido     Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id])
+}
+
+// Participantes de conversación: útil para grupos
+model ParticipanteConversacion {
+  id             Int     @id @default(autoincrement())
+  usuarioId      Int
+  conversacionId Int
+  rol            String? // admin, miembro, invitado
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  usuario      Usuario      @relation(fields: [usuarioId], references: [id])
+  conversacion Conversacion @relation(fields: [conversacionId], references: [id])
+
+  @@unique([usuarioId, conversacionId])
+}
+
+// Logs/Auditoría: registrar acciones importantes
+model Log {
+  id        Int     @id @default(autoincrement())
+  usuarioId Int?
+  accion    String // ej: "login", "crear_mensaje", "borrar_contacto"
+  detalle   String?
+  ip        String?
+  device    String?
+
+  createdAt DateTime @default(now())
+
+  usuario Usuario? @relation(fields: [usuarioId], references: [id])
+}
+
+// Configuraciones de usuario: preferencias personales
+model ConfiguracionUsuario {
+  id         Int     @id @default(autoincrement())
+  usuarioId  Int
+  idioma     String  @default("es")
+  tema       String  @default("claro") // claro / oscuro
+  privacidad String? // ej: "solo contactos", "publico"
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id])
+
+  @@unique([usuarioId])
+}
+
+// Reacciones a mensajes: emojis o similares
+model Reaccion {
+  id        Int    @id @default(autoincrement())
+  usuarioId Int
+  mensajeId Int
+  tipo      String
+
+  createdAt DateTime @default(now())
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id])
+  mensaje Mensaje @relation(fields: [mensajeId], references: [id])
+
+  @@unique([usuarioId, mensajeId, tipo])
+}
+
+// model Usuario {
+//   id      Int     @id @default(autoincrement())
+//   nombre  String
+//   correo  String  @unique
+//   clave   String
+//   token   String  @unique
+//   borrado Boolean @default(false)
+//   rolId   Int
+
+//   createdAt DateTime @default(now())
+//   updatedAt DateTime @updatedAt
+
+//   // Relación al rol (uno a muchos): muchos usuarios pertenecen a un rol
+//   rol Role @relation(name: "UsuarioRole", fields: [rolId], references: [id])
+
+//   // Back-relaciones para conversaciones:
+//   // Un usuario puede ser usuarioUno o usuarioDos en muchas conversaciones
+//   ConversacionUsuarioUno Conversacion[] @relation(name: "ConversacionUsuarioUno")
+//   ConversacionUsuarioDos Conversacion[] @relation(name: "ConversacionUsuarioDos")
+
+//   // Mensajes creados por el usuario
+//   autor Mensaje[] @relation(name: "CreadorMensaje")
+// }
 
 // model Conversacion {
 //   id           Int     @id @default(autoincrement())
