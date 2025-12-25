@@ -62,59 +62,43 @@ export default class AuthTokens {
   */
   static tokenInicioSesion(correo, rol) {
     try {
-      // 5. Verifica que las variables de entorno no estén indefinidas o vacias
-      if (
-        !process.env.JWT_SECRET ||
-        !process.env.JWT_EXPIRATION ||
-        !process.env.JWT_COOKIE_EXPIRES
-      ) {
+      const { JWT_SECRET, JWT_EXPIRATION, JWT_COOKIE_EXPIRES, NODE_ENV } =
+        process.env;
+
+      if (!JWT_SECRET || !JWT_EXPIRATION || !JWT_COOKIE_EXPIRES) {
         return {
           status: "error",
-          numero: 0,
-          message: "Error, variables de entorno vacias...",
+          message: "Configuración incompleta en el servidor",
         };
       }
 
-      // 6. Firma el token con los datos del usuario
-      const token = jsonwebtoken.sign(
-        {
-          correo: correo,
-          rol: rol,
-        },
-        process.env.JWT_SECRET,
-        {
-          expiresIn: process.env.JWT_EXPIRATION,
-        }
-      );
+      const token = jsonwebtoken.sign({ correo, rol }, JWT_SECRET, {
+        expiresIn: JWT_EXPIRATION,
+      });
 
-      // 7. Configura las opciones de la cookie
+      // Convertimos a número para evitar errores de cálculo
+      const diasExpira = Number(JWT_COOKIE_EXPIRES);
+
       const cookieOption = {
-        expires: new Date(
-          Date.now() + process.env.JWT_COOKIE_EXPIRES * 24 * 60 * 60 * 1000
-        ),
+        expires: new Date(Date.now() + diasExpira * 24 * 60 * 60 * 1000),
         path: "/",
-        httpOnly: true, // Mantener este flag por seguridad
-        secure: false, // Cambiar a false si solo usas HTTP
-        sameSite: "lax", // Permitir solicitudes dentro de la red sin problemas
+        httpOnly: true,
+        // Si estamos en producción, secure debe ser true obligatoriamente
+        secure: NODE_ENV === "production",
+        sameSite: "lax",
       };
 
-      // 8. Retorna el token y la configuración de la cookie
       return {
         status: "ok",
-        numero: 1,
-        message: "Token/cookie creadas con éxito...",
-        token: token,
-        cookieOption: cookieOption,
+        message: "Token y configuración de cookie generados",
+        token,
+        cookieOption,
       };
     } catch (error) {
-      // Manejo de errores inesperados (bloque catch)
-      console.error("Error al generar el token o la cookie: " + error);
-
-      // Retorna una respuesta de un error inesperado
+      console.error("Error al generar token:", error);
       return {
         status: "error",
-        numero: 0,
-        message: "Error al crear token/cookie...",
+        message: "Error interno al generar credenciales",
       };
     }
   }
@@ -174,6 +158,67 @@ export default class AuthTokens {
     }
   }
 }
+
+/** 
+    static tokenInicioSesion(correo, rol) {
+      try {
+        // 5. Verifica que las variables de entorno no estén indefinidas o vacias
+        if (
+          !process.env.JWT_SECRET ||
+          !process.env.JWT_EXPIRATION ||
+          !process.env.JWT_COOKIE_EXPIRES
+        ) {
+          return {
+            status: "error",
+            numero: 0,
+            message: "Error, variables de entorno vacias...",
+          };
+        }
+
+        // 6. Firma el token con los datos del usuario
+        const token = jsonwebtoken.sign(
+          {
+            correo: correo,
+            rol: rol,
+          },
+          process.env.JWT_SECRET,
+          {
+            expiresIn: process.env.JWT_EXPIRATION,
+          }
+        );
+
+        // 7. Configura las opciones de la cookie
+        const cookieOption = {
+          expires: new Date(
+            Date.now() + process.env.JWT_COOKIE_EXPIRES * 24 * 60 * 60 * 1000
+          ),
+          path: "/",
+          httpOnly: true, // Mantener este flag por seguridad
+          secure: false, // Cambiar a false si solo usas HTTP
+          sameSite: "lax", // Permitir solicitudes dentro de la red sin problemas
+        };
+
+        // 8. Retorna el token y la configuración de la cookie
+        return {
+          status: "ok",
+          numero: 1,
+          message: "Token/cookie creadas con éxito...",
+          token: token,
+          cookieOption: cookieOption,
+        };
+      } catch (error) {
+        // Manejo de errores inesperados (bloque catch)
+        console.error("Error al generar el token o la cookie: " + error);
+
+        // Retorna una respuesta de un error inesperado
+        return {
+          status: "error",
+          numero: 0,
+          message: "Error al crear token/cookie...",
+        };
+      }
+    }
+  */
 
 /** 
   // Configurar opciones de la cookie esto para el caso que este en un servidor no local

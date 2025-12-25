@@ -1,7 +1,7 @@
+import prisma from "#root/config/prisma.js";
 import respuestasAlBack from "#root/utils/respuestasAlBack.js";
 import validarCamposCrearContacto from "#root/services/contactos/validarCamposCrearContacto.js";
-import prisma from "#root/config/prisma.js";
-import obtenerDatosUsuarioToken from "#root/libs/obtenerDatosUsuarioToken";
+import obtenerDatosUsuarioToken from "#root/libs/obtenerDatosUsuarioToken.js";
 
 export default async function validarCrearContacto(nombre, correo) {
   try {

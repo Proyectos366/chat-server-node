@@ -101,8 +101,13 @@ export default async function validarLogin(correo, clave) {
       token: crearTokenInicioSesion.token,
       cookie: crearTokenInicioSesion.cookieOption,
       redirect: redirect,
-      id_usuario: datosInicioSesion.id,
-      datosUsuario: datosInicioSesion,
+      usuarioId: datosInicioSesion.id,
+      nombre: datosInicioSesion.nombre,
+      correo: datosInicioSesion.correo,
+      clave: datosInicioSesion.clave,
+      rolId: datosInicioSesion.rolId,
+      borrado: datosInicioSesion.borrado,
+      createdAt: datosInicioSesion.createdAt,
     });
   } catch (error) {
     // 14. Manejo de errores inesperados

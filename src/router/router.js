@@ -1,5 +1,8 @@
-import UserController from "#root/controllers/UserController.js";
 import express from "express";
+import UserController from "#root/controllers/UserController.js";
+import { loginLimiter } from "#root/middlewares/rateLimited.js";
+import LoginController from "#root/controllers/LoginController.js";
+import ContactController from "#root/controllers/ContactController.js";
 
 const rutas = express.Router();
 
@@ -8,5 +11,10 @@ rutas.get("/", (req, res) => {
 });
 
 rutas.post("/api/usuarios/crear-usuario", UserController.crearUsuario);
+
+rutas.post("/api/login/iniciar-sesion", loginLimiter, LoginController.login);
+rutas.get("/api/login/cerrar-sesion", LoginController.logout);
+
+rutas.post("/api/contactos/crear-contacto", ContactController.crearContacto);
 
 export default rutas;

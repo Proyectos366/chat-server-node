@@ -38,13 +38,19 @@ export default class ContactController {
         );
       }
 
+      if (validaciones.contactoId) {
+        emitirContactosNuevos({
+          contactoId: validaciones.contactoId,
+        });
+      }
+
       return respuestaAlFront(
         res,
         "ok",
         "Contacto creado con exito",
         {
           messageExtra: validaciones.contactoId
-            ? "Existe en sistema"
+            ? "Existe en el sistema"
             : "No existe en el sistema",
         },
         201
