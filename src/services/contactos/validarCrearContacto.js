@@ -3,9 +3,9 @@ import respuestasAlBack from "#root/utils/respuestasAlBack.js";
 import validarCamposCrearContacto from "#root/services/contactos/validarCamposCrearContacto.js";
 import obtenerDatosUsuarioToken from "#root/libs/obtenerDatosUsuarioToken.js";
 
-export default async function validarCrearContacto(nombre, correo) {
+export default async function validarCrearContacto(nombre, correo, req) {
   try {
-    const validaciones = await obtenerDatosUsuarioToken();
+    const validaciones = await obtenerDatosUsuarioToken(req);
 
     if (validaciones.status === "error") {
       return respuestasAlBack(

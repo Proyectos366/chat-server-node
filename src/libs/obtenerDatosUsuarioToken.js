@@ -16,15 +16,14 @@ import obtenerCorreoToken from "#root/libs/obtenerCorreoToken.js";
  * @param {import("express").Response} res - Objeto de la respuesta Express
  * @returns {Promise<void>} Envía la respuesta estructurada al cliente
  */
-export default async function obtenerDatosUsuarioToken(req, res) {
+export default async function obtenerDatosUsuarioToken(req) {
   try {
     // 1. Extraer correo y rol del token de autenticación.
-    const validaciones = await obtenerCorreoToken(req, res);
+    const validaciones = await obtenerCorreoToken(req);
 
     // 2. Si el token es inválido o no contiene datos, retornar error.
     if (validaciones.status === "error") {
-      return;
-      respuestasAlBack(validaciones.status, validaciones.message);
+      return respuestasAlBack(validaciones.status, validaciones.message);
     }
 
     // 3. Consultar en la base de datos los datos del usuario por correo.
@@ -38,13 +37,13 @@ export default async function obtenerDatosUsuarioToken(req, res) {
 
     // 4. Si no se encuentra el usuario, retornar error.
     if (!datosUsuario) {
-      return;
-      respuestasAlBack("error", "Error, usuario no existe", { codigo: 404 });
+      return respuestasAlBack("error", "Error, usuario no existe", {
+        codigo: 404,
+      });
     }
 
     // 5. Retornar los datos consolidados del usuario.
-    return;
-    respuestasAlBack("ok", "Datos usuario obtenidos...", {
+    return respuestasAlBack("ok", "Datos usuario obtenidos...", {
       usuarioId: datosUsuario.id,
       nombre: datosUsuario.nombre,
       correo: validaciones.correo,
@@ -53,7 +52,6 @@ export default async function obtenerDatosUsuarioToken(req, res) {
   } catch (error) {
     console.error("Error interno obtener datos usuario:", error);
 
-    return;
-    respuestasAlBack("error", "Error interno obtener datos usuario...");
+    return respuestasAlBack("error", "Error interno obtener datos usuario");
   }
 }

@@ -83,7 +83,6 @@ export default class AuthTokens {
         expires: new Date(Date.now() + diasExpira * 24 * 60 * 60 * 1000),
         path: "/",
         httpOnly: true,
-        // Si estamos en producción, secure debe ser true obligatoriamente
         secure: NODE_ENV === "production",
         sameSite: "lax",
       };

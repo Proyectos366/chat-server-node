@@ -1,4 +1,5 @@
 import prisma from "#root/config/prisma.js";
+import { emitirContactosNuevos } from "#root/config/socket/contactos/emitirContactosNuevos.js";
 import validarCrearContacto from "#root/services/contactos/validarCrearContacto.js";
 import { respuestaAlFront } from "#root/utils/respuestaAlFront.js";
 
@@ -7,7 +8,7 @@ export default class ContactController {
     try {
       const { nombre, correo } = req.body;
 
-      const validaciones = await validarCrearContacto(nombre, correo);
+      const validaciones = await validarCrearContacto(nombre, correo, req);
 
       if (validaciones.status === "error") {
         return respuestaAlFront(

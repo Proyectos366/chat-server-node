@@ -1,7 +1,8 @@
-import validarLogin from "#root/services/login/validarLogin.js";
-import nombreToken from "#root/libs/nombreToken.js";
-import { respuestaAlFront } from "#root/utils/respuestaAlFront.js";
 import prisma from "#root/config/prisma.js";
+import validarLogin from "#root/services/login/validarLogin.js";
+import { respuestaAlFront } from "#root/utils/respuestaAlFront.js";
+import nombreToken from "#root/libs/nombreToken.js";
+import { emitirUsuarioOnline } from "#root/config/socket/usuarios/emitirUsuarioOnline.js";
 
 export default class LoginController {
   static async login(req, res) {
@@ -30,8 +31,7 @@ export default class LoginController {
           activo: true,
           ip: req.ip || req.headers["x-forwarded-for"], // Captura la IP
           device: req.headers["user-agent"], // Captura el dispositivo/navegador
-          // La expiración debe coincidir con la de la cookie/JWT
-          expiresAt: validaciones.cookieOption.expires,
+          expiresAt: validaciones.cookie.expires,
         },
       });
 
