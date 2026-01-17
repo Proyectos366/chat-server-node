@@ -12,6 +12,8 @@ rutas.get("/", (req, res) => {
 
 rutas.post("/api/usuarios/crear-usuario", UserController.crearUsuario);
 
+rutas.get("/api/usuarios/usuario-activo", UserController.usuarioActivo);
+
 rutas.post("/api/login/iniciar-sesion", loginLimiter, LoginController.login);
 rutas.get("/api/login/cerrar-sesion", LoginController.logout);
 

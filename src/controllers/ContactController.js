@@ -50,6 +50,7 @@ export default class ContactController {
         "ok",
         "Contacto creado con exito",
         {
+          contactos: creandoContacto,
           messageExtra: validaciones.contactoId
             ? "Existe en el sistema"
             : "No existe en el sistema",

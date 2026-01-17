@@ -47,7 +47,7 @@ export default async function obtenerDatosUsuarioToken(req) {
       usuarioId: datosUsuario.id,
       nombre: datosUsuario.nombre,
       correo: validaciones.correo,
-      rolId: validaciones.id_rol,
+      rolId: validaciones.rolId,
     });
   } catch (error) {
     console.error("Error interno obtener datos usuario:", error);

@@ -47,7 +47,7 @@ export default class LoginController {
         "ok",
         "Iniciando sesión...",
         {
-          redirect: "/chat",
+          redirect: validaciones.redirect,
         },
         200
       );
@@ -67,11 +67,6 @@ export default class LoginController {
   static async logout(req, res) {
     try {
       // 1. Elimina la cookie en Express
-      // res.clearCookie(nombreToken, {
-      //   path: "/", // Asegura que se borre en todo el sitio
-      //   httpOnly: true,
-      // });
-
       res.clearCookie(nombreToken, {
         path: "/",
         httpOnly: true,

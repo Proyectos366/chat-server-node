@@ -3,7 +3,7 @@ import { respuestaAlFront } from "#root/utils/respuestaAlFront.js";
 
 // Limitador específico para el Login (más estricto)
 export const loginLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutos
+  windowMs: 1 * 60 * 1000, // 15 minutos
   limit: 5, // Máximo 5 intentos por IP
   handler: (req, res) => {
     return respuestaAlFront(

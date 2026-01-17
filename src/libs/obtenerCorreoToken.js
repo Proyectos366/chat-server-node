@@ -19,12 +19,12 @@ import respuestasAlBack from "#root/utils/respuestasAlBack.js"; // Utilidad para
 export default async function obtenerCorreoToken(req) {
   try {
     // 1. Extraer el valor del token usando el nombre definido en 'nombreToken'.
-    //const token = req.cookies[nombreToken];
+    const token = req.cookies[nombreToken];
 
-    const authHeader = req.headers["authorization"];
+    // const authHeader = req.headers["authorization"];
 
-    // 3. Extraer solo el token (quitando la palabra 'Bearer')
-    const token = authHeader && authHeader.split(" ")[1];
+    // // 3. Extraer solo el token (quitando la palabra 'Bearer')
+    // const token = authHeader && authHeader.split(" ")[1];
 
     // 2. Descifrar el token para obtener los datos del usuario.
     const descifrarToken = AuthTokens.descifrarToken(token);

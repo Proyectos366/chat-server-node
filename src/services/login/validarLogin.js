@@ -74,13 +74,12 @@ export default async function validarLogin(correo, clave) {
 
     // 9. Determinar la ruta de redirección según el rol del usuario
     const redirecciones = {
-      1: "/dashboard/master",
-      2: "/dashboard/administrador",
-      3: "/dashboard/comun",
+      1: "/dashboard/chat/master",
+      2: "/dashboard/chat",
     };
 
     // 10. Tomamos la direccion por el id_rol o la raiz
-    const redirect = redirecciones[datosInicioSesion.id_rol] || "/";
+    const redirect = redirecciones[datosInicioSesion.rolId] || "/";
 
     // 11. Generar token de sesión
     const crearTokenInicioSesion = AuthTokens.tokenInicioSesion(
